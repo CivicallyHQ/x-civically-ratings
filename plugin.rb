@@ -6,4 +6,13 @@
 
 after_initialize do
   SiteSetting.rating_target_id_enabled = true
+
+  DiscourseEvent.on(:post_created) do |post, opts, user|
+    if post.is_first_post? && opts[:rating]
+      Jobs.enqueue(:bulk_unread_lists_update,
+        place_category_id: user.place_category_id,
+        add_lists: ['rating']
+      )
+    end
+  end
 end
